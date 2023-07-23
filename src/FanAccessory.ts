@@ -121,7 +121,24 @@ export class FanAccessory {
   async setRotationSpeed(value) {
     // rotation speed needs to be scaled from HomeKit's percentage value (Dreo app uses whole numbers, ex. 1-6)
     const curr = Math.ceil(this.fanState.Speed * this.fanState.MaxSpeed / 100);
-    const converted = Math.ceil(value * this.fanState.MaxSpeed / 100);
+    let converted = Math.ceil(value * this.fanState.MaxSpeed / 100);
+
+    if (converted > 10 && converted <= 30){
+      converted = 20
+    }
+    else if (converted > 30 && converted <= 50){
+      converted = 40
+    }
+    else if (converted > 50 && converted <= 70){
+      converted = 60
+    }
+    else if (converted > 70 && converted <= 90){
+      converted = 80
+    }
+    else if (converted > 90 && converted <= 100){
+      converted = 100
+    }
+
     // only send if new value is different from original value
     if (curr !== converted) {
       // avoid setting speed to 0 (illegal value)
