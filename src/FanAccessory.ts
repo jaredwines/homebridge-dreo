@@ -1,4 +1,4 @@
-import { Service, PlatformAccessory} from 'homebridge';
+import { Service, PlatformAccessory, Logger} from 'homebridge';
 import { DreoPlatform } from './platform';
 
 /**
@@ -22,6 +22,7 @@ export class FanAccessory {
     private readonly accessory: PlatformAccessory,
     private readonly state,
     private readonly ws,
+    public readonly log: Logger,
   ) {
 
     // set accessory information
@@ -120,24 +121,27 @@ export class FanAccessory {
   // Handle requests to set the fan speed
   async setRotationSpeed(value) {
     // rotation speed needs to be scaled from HomeKit's percentage value (Dreo app uses whole numbers, ex. 1-6)
+
+    this.log.info("setRotationSpeed - value: " + value)
+
+    if (value > 1 && value <= 30){
+      value = 20
+    }
+    else if (value > 30 && value <= 50){
+      value = 40 
+    }
+    else if (value > 50 && value <= 70){
+      value = 60
+    }
+    else if (value > 70 && value <= 90){
+      value = 80
+    }
+    else if (value > 90 && value <= 100){
+      value = 100
+    }
+
     const curr = Math.ceil(this.fanState.Speed * this.fanState.MaxSpeed / 100);
     let converted = Math.ceil(value * this.fanState.MaxSpeed / 100);
-
-    if (converted > 10 && converted <= 30){
-      converted = 20
-    }
-    else if (converted > 30 && converted <= 50){
-      converted = 40
-    }
-    else if (converted > 50 && converted <= 70){
-      converted = 60
-    }
-    else if (converted > 70 && converted <= 90){
-      converted = 80
-    }
-    else if (converted > 90 && converted <= 100){
-      converted = 100
-    }
 
     // only send if new value is different from original value
     if (curr !== converted) {
@@ -158,6 +162,8 @@ export class FanAccessory {
     }
     // save new speed to cache (we only do this for the speed characteristic because it isn't always reported to the server)
     this.fanState.Speed = value;
+    this.service.updateCharacteristic(this.platform.Characteristic.RotationSpeed, value);
+
   }
 
   async getRotationSpeed() {
